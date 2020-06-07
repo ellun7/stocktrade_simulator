@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
-
+# pull update 
 url1 = 'http://hopey.netfonds.no/posdump.php?'
 url2 = 'date=%s%s%s&paper=GE.N&csv_format=csv'
 url = url1 + url2
