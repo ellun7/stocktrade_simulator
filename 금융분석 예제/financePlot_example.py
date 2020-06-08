@@ -4,7 +4,7 @@ import matplotlib.finance as mpf  #pyploy과 라이브러리가 다름
 
 from pandas_datareader import data as web  #from으로 가져오면 함수쓸 때 앞에 라이브러리명을 안붙여도 됨
 
-# 코드를 업데이트하는 테스트2
+# 코드를 업데이트하는 테스트3
 
 
 start = '2014-05-01'
