@@ -1,1 +1,1 @@
-# stock_analysis
+# Stock Trade Simulator
