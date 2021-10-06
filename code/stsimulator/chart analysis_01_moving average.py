@@ -90,8 +90,21 @@ def generate_val_data(df, period):
     return df_val_goldencross
 
 
+def get_val_data(chart, rolling_mean_period, validation_period, str_columns):
+    df_rolling = generate_rolling_mean(chart, rolling_mean_period)
+    df_rolling = generate_reg_alignment(df_rolling)
+    df_val_goldencross = generate_val_data(df_rolling, validation_period)
+    df_val_goldencross = pd.merge(df_rolling, df_val_goldencross, left_index=True, right_index=True)
+    df_val_goldencross = df_val_goldencross.loc[df_val_goldencross['code_x'] == df_val_goldencross['code_y'], str_columns]
+    df_val_goldencross = df_val_goldencross.rename(columns={'code_x': 'code'})
+    df_val_goldencross = df_val_goldencross.sort_values(['gc_id', 'days'])
 
-######################## code ########################
+    return df_val_goldencross
+
+
+def filter_prev_120days(df_val, )
+
+######################## main code ########################
 
 
 # 데이터 불러오기
@@ -101,25 +114,13 @@ dailychart, dailychart_index, stockitems = read_data()
 # 골든크로스 검색 및 검증 데이터 추출
 rolling_mean_period = [5, 20, 60, 120]
 
-dailychart_rolling = generate_rolling_mean(dailychart, rolling_mean_period)
-dailychart_rolling = generate_reg_alignment(dailychart_rolling)
-df_val_goldencross = generate_val_data(dailychart_rolling, 60)
-
-df_val_goldencross = pd.merge(dailychart_rolling, df_val_goldencross, left_index=True, right_index=True)
-
-df_val_goldencross = df_val_goldencross.loc[df_val_goldencross['code_x'] == df_val_goldencross['code_y'],
-                                            ['gc_id', 'days', 'code_x', 'section', 'date', 'close', 'vol', 'rm_5',
-                                             'rm_20', 'rm_60', 'rm_120', 'reg_alignment']]
-
-# 인덱스일 경우
-# df_val_goldencross = df_val_goldencross.loc[df_val_goldencross['code_x'] == df_val_goldencross['code_y'],
-#                                            ['gc_id', 'days', 'code_x', 'section', 'date', 'close', 'rm_5', 'rm_20','rm_60','rm_120', 'reg_alignment']]
-
-df_val_goldencross = df_val_goldencross.rename(columns={'code_x': 'code'})
-
-df_val_goldencross = df_val_goldencross.sort_values(['gc_id', 'days'])
+str_columns = ['gc_id', 'days', 'code_x', 'section', 'date', 'close', 'vol', 'rm_5', 'rm_20', 'rm_60', 'rm_120', 'reg_alignment']
+df_val_goldencross = get_val_data(dailychart, rolling_mean_period, 60, str_columns)
+str_columns_index = ['gc_id', 'days', 'code_x', 'section', 'date', 'close', 'rm_5', 'rm_20','rm_60','rm_120', 'reg_alignment']
+df_val_goldencross_index = get_val_data(dailychart_index, rolling_mean_period, 60, str_columns)
 
 df_val_goldencross.to_csv('val_goldencross.csv', index=False)
+df_val_goldencross_index.to_csv('val_goldencross_index.csv', index=False)
 
 
 # 골든크로스 수익률 통계

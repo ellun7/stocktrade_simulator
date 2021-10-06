@@ -1,14 +1,21 @@
+# 대신증권 Cybos API 기반의 종목리스트 및 일일 주가 데이터 가져와서 csv 파일로 저장합니다.
+
+
 import win32com.client
 import pandas as pd
 import time
 import datetime
 import pickle
+import os
 
-path = 'C:/Users/SEUNGU_CHOI/source/repos/stocktrade_simulator/'
-data_path = path + 'data/'
+parent_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+
+path_data = parent_path + '/data/'
 column_stockitem = ['code', 'name', 'section', 'sectionKind']
 column_dailychart = ['code', 'section', 'date', 'open', 'high', 'low', 'close',
                      'vol', 'value', 'n_stock', 'agg_price', 'foreign_rate', 'agency_buy']
+
+print ('aaa')
 
 CPE_MARKET_KIND = {'KOSPI': 1, 'KOSDAQ': 2}
 
@@ -130,12 +137,12 @@ def save_by_split(rows):
 
     i = 0
     for i in range(0, int(len(rows) / unit)):
-        with open(data_path + 'tmp_dailychart{0}.dat'.format(i), 'wb') as f:
+        with open(path_data + 'tmp_dailychart{0}.dat'.format(i), 'wb') as f:
             pickle.dump(rows[i * unit:(i + 1) * unit], f)
 
     if i > 0:
         i += 1
-    with open(data_path + 'tmp_dailychart{0}.dat'.format(i), 'wb') as f:
+    with open(path_data + 'tmp_dailychart{0}.dat'.format(i), 'wb') as f:
         pickle.dump(rows[(i) * unit:len(rows)], f)
 
     print('임시 데이터를 분할 저장하였습니다.')
@@ -147,7 +154,7 @@ def merge_splitedfiles(n_file):
     data = list()
 
     for i in range(0, n_file):
-        with open(data_path + 'tmp_dailychart{0}.dat'.format(i), 'rb') as f:
+        with open(path_data + 'tmp_dailychart{0}.dat'.format(i), 'rb') as f:
             tmp_data = pickle.load(f)
         data = data + tmp_data
 
@@ -156,45 +163,6 @@ def merge_splitedfiles(n_file):
     return data
 
 
-#################### main code ##############################
-
-datetime_now = datetime.datetime.now().strftime('%Y%m%d')
-
-# 1. 전 종목 리스트 저장하기(파일 최초 생성 시)
-stockitems = get_stockitem()
-stockitems.to_csv(data_path + 'stockitems(' + datetime_now + ').csv', index=False,
-                  encoding='cp949')  # 윈도우의 경우 encoding='cp949' 추가
-
-# 2. 전 종목 리스트 업데이트
-stockitems_prev = pd.read_csv(data_path + 'stockitems.csv')
-
-stockitems = get_stockitem()
-stockitems = pd.DataFrame(data=stockitems, columns=column_stockitem)
-stockitems = update_data(stockitems_prev, stockitems)
-stockitems.to_csv(data_path + 'stockitems(' + datetime_now + ').csv', index=False, encoding='cp949')
-
-# 3. 일일 주가데이터 가져온 후 dat로 분할 저장
-# 대량(수십만 건 이상) 데이터는 python 32비트 버전에서 pandas로 저장이 안되므로 임시로 dat 파일로 분할해서 저장한 다음,
-# 64비트 버전으로 환경을 변경하고 4번을 실행
-stockitems = pd.read_csv(data_path + 'stockitems(20210828).csv', encoding='cp949')
-stockdata = get_stockdata(stockitems, fromdate='20171221', enddate='20180131')
-save_by_split(stockdata)
-
-# 4. 분할 저장한 raw 데이터 합쳐서 pandas로 저장
-
-n_file = 1
-stockdata = merge_splitedfiles(n_file)
-stockdata = pd.DataFrame(data=stockdata, columns=column_dailychart)
-
-# 업데이트 시에만 적용
-stockdata_prev = pd.read_csv(data_path + 'dailychart(20210828).csv')
-stockdata = update_data(stockdata_prev, stockdata)
-
-stockdata = stockdata.sort_values(by=['code', 'date'])
-stockdata.to_csv(data_path + 'dailychart(' + datetime_now + ').csv', index=False,
-                 encoding='cp949')  # 윈도우의 경우 encoding='cp949' 추가
-
-print('파일을 저장하였습니다.')
 
 
 
